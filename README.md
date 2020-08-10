@@ -387,6 +387,7 @@ Defines the data types that can be published and subscribed to.
 |`VEHICLEDATA_FUELCONSUMPTION`||
 |`VEHICLEDATA_EXTERNTEMP`||
 |`VEHICLEDATA_VIN`||
+|`VEHICLEDATA_GEARSTATUS`||
 |`VEHICLEDATA_PRNDL`||
 |`VEHICLEDATA_TIREPRESSURE`||
 |`VEHICLEDATA_ODOMETER`||
@@ -412,6 +413,8 @@ Defines the data types that can be published and subscribed to.
 |`VEHICLEDATA_CLOUDAPPVEHICLEID`||
 |`VEHICLEDATA_OEM_CUSTOM_DATA`||
 |`VEHICLEDATA_STABILITYCONTROLSSTATUS`||
+|`VEHICLEDATA_WINDOWSTATUS`||
+|`VEHICLEDATA_HANDSOFFSTEERING`||
 
 
 ### HybridAppPreference
@@ -424,6 +427,16 @@ Enumeration for the user's preference of which app type to use when both are ava
 |`MOBILE`||
 |`CLOUD`||
 |`BOTH`||
+
+
+### CapacityUnit
+##### Elements
+
+| Value | Description | 
+| ---------- |:-----------:|
+|`LITERS`||
+|`KILOWATTHOURS`||
+|`KILOGRAMS`||
 
 
 ### ButtonName
@@ -752,7 +765,7 @@ The selected gear.
 |`PARK`|Parking|
 |`REVERSE`|Reverse gear|
 |`NEUTRAL`|No gear|
-|`DRIVE`||
+|`DRIVE`|Regular Drive mode|
 |`SPORT`|Drive Sport mode|
 |`LOWGEAR`|1st gear hold|
 |`FIRST`||
@@ -763,8 +776,27 @@ The selected gear.
 |`SIXTH`||
 |`SEVENTH`||
 |`EIGHTH`||
+|`NINTH`||
+|`TENTH`||
 |`UNKNOWN`||
 |`FAULT`||
+
+
+### TransmissionType
+Type of transmission used in the vehicle.
+
+##### Elements
+
+| Value | Description | 
+| ---------- |:-----------:|
+|`MANUAL`|Manual transmission.|
+|`AUTOMATIC`|Automatic transmission.|
+|`SEMI_AUTOMATIC`|Semi automatic transmission.|
+|`DUAL_CLUTCH`|Dual clutch transmission.|
+|`CONTINUOUSLY_VARIABLE`|Continuously variable transmission(CVT).|
+|`INFINITELY_VARIABLE`|Infinitely variable transmission.|
+|`ELECTRIC_VARIABLE`|Electric variable transmission.|
+|`DIRECT_DRIVE`|Direct drive between engine and wheels.|
 
 
 ### ComponentVolumeStatus
@@ -1832,6 +1864,10 @@ Specifies the version number of the SmartDeviceLink protocol that is supported b
 | ---------- | ---------- |:-----------: |:-----------:|
 |`type`|FuelType|False||
 |`range`|Float|False|The estimate range in KM the vehicle can travel based on fuel level and consumption.|
+|`level`|Float|False|The relative remaining capacity of this fuel type (percentage).|
+|`levelState`|ComponentVolumeStatus|False|The fuel level state|
+|`capacity`|Float|False|The absolute capacity of this fuel type.|
+|`capacityUnit`|CapacityUnit|False|The unit of the capacity of this fuel type such as liters for gasoline or kWh for batteries.|
 
 
 ### SingleTireStatus
@@ -2193,6 +2229,26 @@ Describes a location (origin coordinates and span) of a vehicle component.
 |`colspan`|Integer|False||
 |`rowspan`|Integer|False||
 |`levelspan`|Integer|False||
+
+
+### WindowState
+##### Parameters
+
+| Value |  Type | Mandatory | Description | 
+| ---------- | ---------- |:-----------: |:-----------:|
+|`approximatePosition`|Integer|True|The approximate percentage that the window is open - 0 being fully closed, 100 being fully open|
+|`deviation`|Integer|True|The percentage deviation of the approximatePosition. e.g. If the approximatePosition is 50 and the deviation is 10, then the window's location is somewhere between 40 and 60.|
+
+
+### WindowStatus
+Describes the status of a window of a door/liftgate etc.
+
+##### Parameters
+
+| Value |  Type | Mandatory | Description | 
+| ---------- | ---------- |:-----------: |:-----------:|
+|`location`|Grid|True||
+|`state`|WindowState|True||
 
 
 ### ModuleInfo
@@ -3134,6 +3190,16 @@ The systemCapabilityType identifies which data object exists in this struct. For
 |`displayCapabilities`|DisplayCapability[]|False||
 
 
+### GearStatus
+##### Parameters
+
+| Value |  Type | Mandatory | Description | 
+| ---------- | ---------- |:-----------: |:-----------:|
+|`userSelectedGear`|PRNDL|False|Gear position selected by the user i.e. Park, Drive, Reverse|
+|`actualGear`|PRNDL|False|Actual Gear in use by the transmission|
+|`transmissionType`|TransmissionType|False|Tells the transmission type|
+
+
 
 <div style="page-break-after: always;"></div>
 
@@ -3770,13 +3836,14 @@ Subscribes for specific published data items. The data will be only sent if it h
 |`gps`|Boolean|False|See GPSData|
 |`speed`|Boolean|False|The vehicle speed in kilometers per hour|
 |`rpm`|Boolean|False|The number of revolutions per minute of the engine|
-|`fuelLevel`|Boolean|False|The fuel level in the tank (percentage)|
-|`fuelLevel_State`|Boolean|False|The fuel level state|
+|`fuelLevel`|Boolean|False|The fuel level in the tank (percentage). This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
+|`fuelLevel_State`|Boolean|False|The fuel level state. This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
 |`instantFuelConsumption`|Boolean|False|The instantaneous fuel consumption in microlitres|
-|`fuelRange`|Boolean|False|The estimate range in KM the vehicle can travel based on fuel level and consumption|
+|`fuelRange`|Boolean|False|The fuel type, estimated range in KM, fuel level/capacity and fuel level state for the vehicle. See struct FuelRange for details.|
 |`externalTemperature`|Boolean|False|The external temperature in degrees celsius|
 |`turnSignal`|Boolean|False|See TurnSignal|
-|`prndl`|Boolean|False|See PRNDL|
+|`gearStatus`|Boolean|False|See GearStatus|
+|`prndl`|Boolean|False|See PRNDL. This parameter is deprecated and it is now covered in `gearStatus`|
 |`tirePressure`|Boolean|False|See TireStatus|
 |`odometer`|Boolean|False|Odometer in km|
 |`beltStatus`|Boolean|False|The status of the seat belts|
@@ -3797,6 +3864,8 @@ Subscribes for specific published data items. The data will be only sent if it h
 |`emergencyEvent`|Boolean|False|Information related to an emergency event (and if it occurred)|
 |`clusterModeStatus`|Boolean|False|The status modes of the cluster|
 |`myKey`|Boolean|False|Information related to the MyKey feature|
+|`windowStatus`|Boolean|False|See WindowStatus|
+|`handsOffSteering`|Boolean|False|To indicate whether driver hands are off the steering wheel|
 
 
 ### SubscribeVehicleData
@@ -3812,13 +3881,14 @@ Message Type: **response**
 |`gps`|VehicleDataResult|False|See GPSData|
 |`speed`|VehicleDataResult|False|The vehicle speed in kilometers per hour|
 |`rpm`|VehicleDataResult|False|The number of revolutions per minute of the engine|
-|`fuelLevel`|VehicleDataResult|False|The fuel level in the tank (percentage)|
-|`fuelLevel_State`|VehicleDataResult|False|The fuel level state|
+|`fuelLevel`|VehicleDataResult|False|The fuel level in the tank (percentage). This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
+|`fuelLevel_State`|VehicleDataResult|False|The fuel level state. This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
 |`instantFuelConsumption`|VehicleDataResult|False|The instantaneous fuel consumption in microlitres|
-|`fuelRange`|VehicleDataResult|False|The estimate range in KM the vehicle can travel based on fuel level and consumption|
+|`fuelRange`|VehicleDataResult|False|The fuel type, estimated range in KM, fuel level/capacity and fuel level state for the vehicle. See struct FuelRange for details.|
 |`externalTemperature`|VehicleDataResult|False|The external temperature in degrees celsius.|
 |`turnSignal`|VehicleDataResult|False|See TurnSignal|
-|`prndl`|VehicleDataResult|False|See PRNDL|
+|`gearStatus`|VehicleDataResult|False|See GearStatus|
+|`prndl`|VehicleDataResult|False|See PRNDL. This parameter is deprecated and it is now covered in `gearStatus`|
 |`tirePressure`|VehicleDataResult|False|See TireStatus|
 |`odometer`|VehicleDataResult|False|Odometer in km|
 |`beltStatus`|VehicleDataResult|False|The status of the seat belts|
@@ -3839,6 +3909,8 @@ Message Type: **response**
 |`emergencyEvent`|VehicleDataResult|False|Information related to an emergency event (and if it occurred)|
 |`clusterModes`|VehicleDataResult|False|The status modes of the cluster|
 |`myKey`|VehicleDataResult|False|Information related to the MyKey feature|
+|`windowStatus`|VehicleDataResult|False|See WindowStatus|
+|`handsOffSteering`|VehicleDataResult|False|To indicate whether driver hands are off the steering wheel|
 
 
 ### UnsubscribeVehicleData
@@ -3853,13 +3925,14 @@ This function is used to unsubscribe the notifications from the subscribeVehicle
 |`gps`|Boolean|False|See GPSData|
 |`speed`|Boolean|False|The vehicle speed in kilometers per hour|
 |`rpm`|Boolean|False|The number of revolutions per minute of the engine|
-|`fuelLevel`|Boolean|False|The fuel level in the tank (percentage)|
-|`fuelLevel_State`|Boolean|False|The fuel level state|
+|`fuelLevel`|Boolean|False|The fuel level in the tank (percentage). This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
+|`fuelLevel_State`|Boolean|False|The fuel level state. This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
 |`instantFuelConsumption`|Boolean|False|The instantaneous fuel consumption in microlitres|
-|`fuelRange`|Boolean|False|The estimate range in KM the vehicle can travel based on fuel level and consumption|
+|`fuelRange`|Boolean|False|The fuel type, estimated range in KM, fuel level/capacity and fuel level state for the vehicle. See struct FuelRange for details.|
 |`externalTemperature`|Boolean|False|The external temperature in degrees celsius.|
 |`turnSignal`|Boolean|False|See TurnSignal|
-|`prndl`|Boolean|False|See PRNDL|
+|`gearStatus`|Boolean|False|See GearStatus|
+|`prndl`|Boolean|False|See PRNDL. This parameter is deprecated and it is now covered in `gearStatus`|
 |`tirePressure`|Boolean|False|See TireStatus|
 |`odometer`|Boolean|False|Odometer in km|
 |`beltStatus`|Boolean|False|The status of the seat belts|
@@ -3880,6 +3953,8 @@ This function is used to unsubscribe the notifications from the subscribeVehicle
 |`emergencyEvent`|Boolean|False|Information related to an emergency event (and if it occurred)|
 |`clusterModeStatus`|Boolean|False|The status modes of the cluster|
 |`myKey`|Boolean|False|Information related to the MyKey feature|
+|`windowStatus`|Boolean|False|See WindowStatus|
+|`handsOffSteering`|Boolean|False|To indicate whether driver hands are off the steering wheel|
 
 
 ### UnsubscribeVehicleData
@@ -3895,13 +3970,14 @@ Message Type: **response**
 |`gps`|VehicleDataResult|False|See GPSData|
 |`speed`|VehicleDataResult|False|The vehicle speed in kilometers per hour|
 |`rpm`|VehicleDataResult|False|The number of revolutions per minute of the engine|
-|`fuelLevel`|VehicleDataResult|False|The fuel level in the tank (percentage)|
-|`fuelLevel_State`|VehicleDataResult|False|The fuel level state|
+|`fuelLevel`|VehicleDataResult|False|The fuel level in the tank (percentage). This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
+|`fuelLevel_State`|VehicleDataResult|False|The fuel level state. This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
 |`instantFuelConsumption`|VehicleDataResult|False|The instantaneous fuel consumption in microlitres|
-|`fuelRange`|VehicleDataResult|False|The estimate range in KM the vehicle can travel based on fuel level and consumption|
+|`fuelRange`|VehicleDataResult|False|The fuel type, estimated range in KM, fuel level/capacity and fuel level state for the vehicle. See struct FuelRange for details.|
 |`externalTemperature`|VehicleDataResult|False|The external temperature in degrees celsius|
 |`turnSignal`|VehicleDataResult|False|See TurnSignal|
-|`prndl`|VehicleDataResult|False|See PRNDL|
+|`gearStatus`|VehicleDataResult|False|See GearStatus|
+|`prndl`|VehicleDataResult|False|See PRNDL. This parameter is deprecated and it is now covered in `gearStatus`|
 |`tirePressure`|VehicleDataResult|False|See TireStatus|
 |`odometer`|VehicleDataResult|False|Odometer in km|
 |`beltStatus`|VehicleDataResult|False|The status of the seat belts|
@@ -3922,6 +3998,8 @@ Message Type: **response**
 |`emergencyEvent`|VehicleDataResult|False|Information related to an emergency event (and if it occurred)|
 |`clusterModes`|VehicleDataResult|False|The status modes of the cluster|
 |`myKey`|VehicleDataResult|False|Information related to the MyKey feature|
+|`windowStatus`|VehicleDataResult|False|See WindowStatus|
+|`handsOffSteering`|VehicleDataResult|False|To indicate whether driver hands are off the steering wheel|
 
 
 ### GetVehicleData
@@ -3936,14 +4014,15 @@ Non periodic vehicle data read request.
 |`gps`|Boolean|False|See GPSData|
 |`speed`|Boolean|False|The vehicle speed in kilometers per hour|
 |`rpm`|Boolean|False|The number of revolutions per minute of the engine|
-|`fuelLevel`|Boolean|False|The fuel level in the tank (percentage)|
-|`fuelLevel_State`|Boolean|False|The fuel level state|
+|`fuelLevel`|Boolean|False|The fuel level in the tank (percentage). This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
+|`fuelLevel_State`|Boolean|False|The fuel level state. This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
 |`instantFuelConsumption`|Boolean|False|The instantaneous fuel consumption in microlitres|
-|`fuelRange`|Boolean|False|The estimate range in KM the vehicle can travel based on fuel level and consumption|
+|`fuelRange`|Boolean|False|The fuel type, estimated range in KM, fuel level/capacity and fuel level state for the vehicle. See struct FuelRange for details.|
 |`externalTemperature`|Boolean|False|The external temperature in degrees celsius|
 |`turnSignal`|Boolean|False|See TurnSignal|
 |`vin`|Boolean|False|Vehicle identification number|
-|`prndl`|Boolean|False|See PRNDL|
+|`gearStatus`|Boolean|False|See GearStatus|
+|`prndl`|Boolean|False|See PRNDL. This parameter is deprecated and it is now covered in `gearStatus`|
 |`tirePressure`|Boolean|False|See TireStatus|
 |`odometer`|Boolean|False|Odometer in km|
 |`beltStatus`|Boolean|False|The status of the seat belts|
@@ -3964,6 +4043,8 @@ Non periodic vehicle data read request.
 |`emergencyEvent`|Boolean|False|Information related to an emergency event (and if it occurred)|
 |`clusterModeStatus`|Boolean|False|The status modes of the cluster|
 |`myKey`|Boolean|False|Information related to the MyKey feature|
+|`windowStatus`|Boolean|False|See WindowStatus|
+|`handsOffSteering`|Boolean|False|To indicate whether driver hands are off the steering wheel|
 
 
 ### GetVehicleData
@@ -3979,14 +4060,15 @@ Message Type: **response**
 |`gps`|GPSData|False|See GPSData|
 |`speed`|Float|False|The vehicle speed in kilometers per hour|
 |`rpm`|Integer|False|The number of revolutions per minute of the engine|
-|`fuelLevel`|Float|False|The fuel level in the tank (percentage)|
-|`fuelLevel_State`|ComponentVolumeStatus|False|The fuel level state|
+|`fuelLevel`|Float|False|The fuel level in the tank (percentage). This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
+|`fuelLevel_State`|ComponentVolumeStatus|False|The fuel level state. This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
 |`instantFuelConsumption`|Float|False|The instantaneous fuel consumption in microlitres|
-|`fuelRange`|FuelRange[]|False|The estimate range in KM the vehicle can travel based on fuel level and consumption|
+|`fuelRange`|FuelRange[]|False|The fuel type, estimated range in KM, fuel level/capacity and fuel level state for the vehicle. See struct FuelRange for details.|
 |`externalTemperature`|Float|False|The external temperature in degrees celsius|
 |`turnSignal`|TurnSignal|False|See TurnSignal|
 |`vin`|String|False|Vehicle identification number|
-|`prndl`|PRNDL|False|See PRNDL|
+|`gearStatus`|GearStatus|False|See GearStatus|
+|`prndl`|PRNDL|False|See PRNDL. This parameter is deprecated and it is now covered in `gearStatus`|
 |`tirePressure`|TireStatus|False|See TireStatus|
 |`odometer`|Integer|False|Odometer in km|
 |`beltStatus`|BeltStatus|False|The status of the seat belts|
@@ -4007,6 +4089,8 @@ Message Type: **response**
 |`emergencyEvent`|EmergencyEvent|False|Information related to an emergency event (and if it occurred)|
 |`clusterModeStatus`|ClusterModeStatus|False|The status modes of the cluster|
 |`myKey`|MyKey|False|Information related to the MyKey feature|
+|`windowStatus`|WindowStatus[]|False|See WindowStatus|
+|`handsOffSteering`|Boolean|False|To indicate whether driver hands are off the steering wheel|
 
 
 ### ReadDID
@@ -5026,14 +5110,15 @@ Callback for the periodic and non periodic vehicle data read function.
 |`gps`|GPSData|False|See GPSData|
 |`speed`|Float|False|The vehicle speed in kilometers per hour|
 |`rpm`|Integer|False|The number of revolutions per minute of the engine|
-|`fuelLevel`|Float|False|The fuel level in the tank (percentage)|
-|`fuelLevel_State`|ComponentVolumeStatus|False|The fuel level state|
+|`fuelLevel`|Float|False|The fuel level in the tank (percentage). This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
+|`fuelLevel_State`|ComponentVolumeStatus|False|The fuel level state. This parameter is deprecated starting RPC Spec 7.0, please see fuelRange.|
 |`instantFuelConsumption`|Float|False|The instantaneous fuel consumption in microlitres|
-|`fuelRange`|FuelRange[]|False|The estimate range in KM the vehicle can travel based on fuel level and consumption|
+|`fuelRange`|FuelRange[]|False|The fuel type, estimated range in KM, fuel level/capacity and fuel level state for the vehicle. See struct FuelRange for details.|
 |`externalTemperature`|Float|False|The external temperature in degrees celsius|
 |`turnSignal`|TurnSignal|False|See TurnSignal|
 |`vin`|String|False|Vehicle identification number.|
-|`prndl`|PRNDL|False|See PRNDL|
+|`gearStatus`|GearStatus|False|See GearStatus|
+|`prndl`|PRNDL|False|See PRNDL. This parameter is deprecated and it is now covered in `gearStatus`|
 |`tirePressure`|TireStatus|False|See TireStatus|
 |`odometer`|Integer|False|Odometer in km|
 |`beltStatus`|BeltStatus|False|The status of the seat belts|
@@ -5054,6 +5139,8 @@ Callback for the periodic and non periodic vehicle data read function.
 |`emergencyEvent`|EmergencyEvent|False|Information related to an emergency event (and if it occurred)|
 |`clusterModeStatus`|ClusterModeStatus|False|The status modes of the cluster|
 |`myKey`|MyKey|False|Information related to the MyKey feature|
+|`windowStatus`|WindowStatus[]|False|See WindowStatus|
+|`handsOffSteering`|Boolean|False|To indicate whether driver hands are off the steering wheel|
 
 
 ### OnCommand
